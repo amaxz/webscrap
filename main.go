@@ -40,6 +40,11 @@ func main() {
 
 		log.Printf(scrap.KEYLOG_FORMAT, "Suning", keyword)
 		scrap.LoadSuning(keyword)
+
+		if index != len(args) - 1 {
+			time.Sleep(time.Duration(2) * time.Second)
+		}
+
 		log.Printf(scrap.KEYLOG_FORMAT, "JD", keyword)
 		scrap.LoadJD(keyword)
 

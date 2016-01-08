@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"io/ioutil"
 	"encoding/json"
+	"strings"
 )
 
 type Price struct {
@@ -27,10 +28,10 @@ type Res struct {
 
 func Suning(keyword string) []Item {
 
-	targeturl := "http://search.suning.com/" + keyword + "/&sc=0&ct=1&st=0"
+	targeturl := "http://search.suning.com/" + keyword + "/&ci=20006&iy=-1"//"/&sc=0&ct=1&st=0"
 	request := NewRequest(targeturl)
 	transport := &httpclient.Transport{
-		ConnectTimeout:        5 * time.Second,
+		ConnectTimeout:        10 * time.Second,
 		RequestTimeout:        10 * time.Second,
 		ResponseHeaderTimeout: 15 * time.Second,
 	}
@@ -46,6 +47,11 @@ func Suning(keyword string) []Item {
 	}
 
 	//fmt.Println(doc.Html())
+
+	if response.StatusCode != 200 {
+		log.Println(response.StatusCode, request.URL.String(), doc.Find("title").Text())
+		return []Item{}
+	}
 
 	nodes := doc.Find(".wrap")
 	items := make([]Item, nodes.Length())
@@ -83,7 +89,7 @@ func Suning(keyword string) []Item {
 func QueryPrice(client *http.Client, items []Item) []Item {
 	length := len(items)
 	priceurl := ""
-	for i := 0; i < length; i ++ {
+	for i := 0; i < length && i < 20; i ++ {
 		priceurl += items[i].id + "_" + items[i].catentry
 		if (i < length - 1) {
 			priceurl += ","
@@ -98,13 +104,12 @@ func QueryPrice(client *http.Client, items []Item) []Item {
 
 		body, _ := ioutil.ReadAll(response.Body)
 
-		//var dat map[string]interface{}
+		fmt.Println("Parse json", priceurl, string(body))
 		dat := ParseJson(body)
-		//fmt.Println(dat.Status)
 
 		for j := 0; j < len(items); j++ {
 			for i := 0; i < len(dat.Rs); i++ {
-				if items[j].id == dat.Rs[i].CmmdtyCode {
+				if strings.EqualFold(items[j].id, dat.Rs[i].CmmdtyCode) {
 					items[j].price = dat.Rs[i].Price
 					fmt.Printf(ITEMLOG_FORMAT, j, items[j].price, items[j].title)
 				}
@@ -115,9 +120,6 @@ func QueryPrice(client *http.Client, items []Item) []Item {
 }
 
 func ParseJson(body []byte) *Price {
-
-	//fmt.Println("Parse json", string(body))
-
 	var dat Price
 	if err := json.Unmarshal([]byte(body), &dat); err != nil {
 		fmt.Printf(err.Error())
@@ -138,8 +140,8 @@ func LoadSuning(keyword string) {
 	items := Suning(keyword)
 	for index := 0; index < len(items); index++ {
 		item := items[index]
-		log.Printf(ITEMLOG_FORMAT, index, item.price, item.title)
+		if (item.price != "" && item.price != "0") {
+			log.Printf(ITEMLOG_FORMAT, index, item.price, item.title)
+		}
 	}
 }
-
-

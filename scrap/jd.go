@@ -7,8 +7,6 @@ import (
 	"net/http"
 	httpclient "github.com/mreiferson/go-httpclient"
 	"github.com/PuerkitoBio/goquery"
-//"golang.org/x/text/transform"
-//"golang.org/x/text/encoding/unicode"
 	"net/url"
 )
 
@@ -27,7 +25,6 @@ func JD(keyword string) []Item {
 	client := &http.Client{Transport: transport}
 
 	response, err := client.Do(request)
-	//	utfBody, err := iconv.NewReader(response.Body, "GBK", "utf-8")
 
 	defer response.Body.Close()
 
@@ -51,7 +48,7 @@ func JD(keyword string) []Item {
 
 
 func LoadJD(keyword string) {
-	fmt.Printf(KEYLOG_FORMAT, keyword)
+	fmt.Printf(KEYLOG_FORMAT, "JD", keyword)
 	keyword = url.QueryEscape(keyword)
 	items := JD(keyword)
 	for index := 0; index < len(items); index++ {
@@ -60,6 +57,9 @@ func LoadJD(keyword string) {
 	}
 }
 
+//"golang.org/x/text/transform"
+//"golang.org/x/text/encoding/unicode"
+//utfBody, err := iconv.NewReader(response.Body, "GBK", "utf-8")
 //func ToUTF8(gbkstr string) string {
 //	result, _, _ := transform.String(unicode.UTF8.NewEncoder(), gbkstr)
 //	return result

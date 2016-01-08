@@ -38,7 +38,9 @@ func main() {
 		keyword := args[index]
 		keyword = strings.Replace(keyword, "-", " ", -1)
 
-		log.Printf(scrap.KEYLOG_FORMAT, keyword)
+		log.Printf(scrap.KEYLOG_FORMAT, "Suning", keyword)
+		scrap.LoadSuning(keyword)
+		log.Printf(scrap.KEYLOG_FORMAT, "JD", keyword)
 		scrap.LoadJD(keyword)
 
 		tmin := 8 + r.Intn(12)

@@ -5,11 +5,13 @@ import (
 )
 
 type Item struct {
+	id    string
 	title string
 	price string
+	catentry string
 }
 
-const KEYLOG_FORMAT = "     ========================== %s ==========================\n"
+const KEYLOG_FORMAT = "     ========================== %s : %s ==========================\n"
 const ITEMLOG_FORMAT = "Item:%2d: %8s %s\n"
 
 

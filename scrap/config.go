@@ -11,7 +11,7 @@ type Item struct {
 	catentry string
 }
 
-const KEYLOG_FORMAT = "     ========================== %s : %s ==========================\n"
+const KEYLOG_FORMAT = "\n     ========================== %s : %s ==========================\n"
 const ITEMLOG_FORMAT = "Item:%2d: %8s %s\n"
 
 

@@ -39,7 +39,7 @@ func JD(keyword string) []Item {
 	nodes.Each(func(i int, s *goquery.Selection) {
 		vband := ParseTitle(s.Find("a").Text())
 		vprice := ParsePrice(s.Find(".p-price").Text())
-		fmt.Printf(ITEMLOG_FORMAT, i, vprice, vband)
+		fmt.Printf(ITEMLOG_FORMAT, i + 1, vprice, vband)
 		items[i] = Item{title: vband, price: vprice}
 	})
 
@@ -48,12 +48,12 @@ func JD(keyword string) []Item {
 
 
 func LoadJD(keyword string) {
-	fmt.Printf(KEYLOG_FORMAT, "JD", keyword)
+	fmt.Printf(KEYLOG_FORMAT, "京东商城", keyword)
 	keyword = url.QueryEscape(keyword)
 	items := JD(keyword)
 	for index := 0; index < len(items); index++ {
 		item := items[index]
-		log.Printf(ITEMLOG_FORMAT, index, item.price, item.title)
+		log.Printf(ITEMLOG_FORMAT, index + 1, item.price, item.title)
 	}
 }
 

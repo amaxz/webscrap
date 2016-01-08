@@ -104,14 +104,14 @@ func QueryPrice(client *http.Client, items []Item) []Item {
 
 		body, _ := ioutil.ReadAll(response.Body)
 
-		fmt.Println("Parse json", priceurl, string(body))
+		//fmt.Println("Parse json", priceurl, string(body))
 		dat := ParseJson(body)
 
 		for j := 0; j < len(items); j++ {
 			for i := 0; i < len(dat.Rs); i++ {
 				if strings.EqualFold(items[j].id, dat.Rs[i].CmmdtyCode) {
 					items[j].price = dat.Rs[i].Price
-					fmt.Printf(ITEMLOG_FORMAT, j, items[j].price, items[j].title)
+					fmt.Printf(ITEMLOG_FORMAT, j + 1, items[j].price, items[j].title)
 				}
 			}
 		}
@@ -135,13 +135,13 @@ func NewRequest(targeturl string) *http.Request {
 }
 
 func LoadSuning(keyword string) {
-	fmt.Printf(KEYLOG_FORMAT, "Suning", keyword)
+	fmt.Printf(KEYLOG_FORMAT, "苏宁易购", keyword)
 	keyword = url.QueryEscape(keyword)
 	items := Suning(keyword)
 	for index := 0; index < len(items); index++ {
 		item := items[index]
 		if (item.price != "" && item.price != "0") {
-			log.Printf(ITEMLOG_FORMAT, index, item.price, item.title)
+			log.Printf(ITEMLOG_FORMAT, index + 1, item.price, item.title)
 		}
 	}
 }

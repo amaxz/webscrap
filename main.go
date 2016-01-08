@@ -18,7 +18,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	//defer logFile.Close()
+	defer logFile.Close()
 
 	log.SetOutput(logFile)
 	log.SetFlags(log.Ldate | log.Ltime)
@@ -38,14 +38,14 @@ func main() {
 		keyword := args[index]
 		keyword = strings.Replace(keyword, "-", " ", -1)
 
-		log.Printf(scrap.KEYLOG_FORMAT, "Suning", keyword)
+		log.Printf(scrap.KEYLOG_FORMAT, "苏宁易购", keyword)
 		scrap.LoadSuning(keyword)
 
 		if index != len(args) - 1 {
 			time.Sleep(time.Duration(2) * time.Second)
 		}
 
-		log.Printf(scrap.KEYLOG_FORMAT, "JD", keyword)
+		log.Printf(scrap.KEYLOG_FORMAT, "京东商城", keyword)
 		scrap.LoadJD(keyword)
 
 		tmin := 8 + r.Intn(12)

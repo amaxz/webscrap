@@ -1,7 +1,6 @@
 package scrap
 
 import (
-	"fmt"
 	"log"
 	"time"
 	"net/http"
@@ -16,17 +15,18 @@ import (
 
 type Price struct {
 	Status int `json:"status"`
-	Rs    []Res  `json:"rs"`
+	Rs     []Res  `json:"rs"`
 }
 
 type Res struct {
 	CmmdtyCode string   `json:"cmmdtyCode"`
 	CatentryId string   `json:"catentryId"`
 	Price      string   `json:"price"`
-	SnPrice    string   `json:"snPrice"`
+	VendorName string   `json:"vendorName"`
+	//SnPrice    string   `json:"snPrice"`
 }
 
-func Suning(keyword string) []Item {
+func Suning(keyword string) ([]Item, string) {
 
 	targeturl := "http://search.suning.com/" + keyword + "/&ci=20006&iy=-1"//"/&sc=0&ct=1&st=0"
 	request := NewRequest(targeturl)
@@ -50,25 +50,25 @@ func Suning(keyword string) []Item {
 
 	if response.StatusCode != 200 {
 		log.Println(response.StatusCode, request.URL.String(), doc.Find("title").Text())
-		return []Item{}
+		return []Item{}, targeturl
 	}
 
 	nodes := doc.Find(".wrap")
 	items := make([]Item, nodes.Length())
 	nodes.Each(func(i int, s *goquery.Selection) {
 
-		vband := ParseTitle(s.Find("a.sellPoint").Text())
-		item := Item{title: vband, price: "0"}
+		a := s.Find("a.sellPoint")
+		vband := ParseTitle(a.Text())
+		href, _ := a.Attr("href")
+		item := Item{title: vband, price: "0", url: href}
 
 		if classstr, ok := s.Find(".hidenInfo").Attr("datapro"); ok {
 			regx, _ := regexp.Compile("\\d+")
-			properties := regx.FindAllString(classstr, -1)
-			if (len(properties) >= 2) {
-				commodityid := properties[0]
-				catentryid := properties[1]
+
+			if properties := regx.FindAllString(classstr, -1); len(properties) >= 2 {
+				commodityid, catentryid := properties[0], properties[1]
 				if len(commodityid) < len(catentryid) {
-					commodityid = properties[1]
-					catentryid = properties[0]
+					commodityid, catentryid = properties[1], properties[0]
 				}
 				zeros := 18 - len(commodityid)
 				for times := 0; times < zeros; times ++ {
@@ -83,23 +83,33 @@ func Suning(keyword string) []Item {
 		items[i] = item
 	})
 
-	return QueryPrice(client, items)
+	return QueryPrice(client, items), targeturl
 }
 
 func QueryPrice(client *http.Client, items []Item) []Item {
-	length := len(items)
-	priceurl := ""
-	for i := 0; i < length && i < 20; i ++ {
-		priceurl += items[i].id + "_" + items[i].catentry
-		if (i < length - 1) {
-			priceurl += ","
+	var ids string
+	for i, length := 0, len(items); i < length; i ++ {
+		ids += items[i].id + "_" + items[i].catentry
+		if (i + 1) >= 10 && (i + 1) % 10 == 0 {
+			FetchPrice(client, ids, items)
+			ids = ""
+		} else if i < length {
+			ids += ","
 		}
 	}
-	priceurl = "http://ds.suning.cn/ds/general/" + priceurl + "-9063-2-0000000000-1--.json"
-	request := NewRequest(priceurl)
+	if ids != "" {
+		FetchPrice(client, ids, items)
+	}
+	return items
+}
 
+func FetchPrice(client *http.Client, ids string, items []Item) {
+	priceurl := "http://ds.suning.cn/ds/general/" + ids + "-9063-1--1--getDataFromDsServer2.json"// "-9063-2-0000000000-1--.json"
+	request := NewRequest(priceurl)
+	//fmt.Println("Fetch", priceurl)
 	response, err := client.Do(request)
 	defer response.Body.Close()
+
 	if (err == nil) {
 
 		body, _ := ioutil.ReadAll(response.Body)
@@ -111,18 +121,17 @@ func QueryPrice(client *http.Client, items []Item) []Item {
 			for i := 0; i < len(dat.Rs); i++ {
 				if strings.EqualFold(items[j].id, dat.Rs[i].CmmdtyCode) {
 					items[j].price = dat.Rs[i].Price
-					fmt.Printf(ITEMLOG_FORMAT, j + 1, items[j].price, items[j].title)
+					items[j].vendor = dat.Rs[i].VendorName
 				}
 			}
 		}
 	}
-	return items
 }
 
 func ParseJson(body []byte) *Price {
 	var dat Price
 	if err := json.Unmarshal([]byte(body), &dat); err != nil {
-		fmt.Printf(err.Error())
+		log.Printf(err.Error())
 	}
 	return &dat
 }
@@ -135,13 +144,24 @@ func NewRequest(targeturl string) *http.Request {
 }
 
 func LoadSuning(keyword string) {
-	fmt.Printf(KEYLOG_FORMAT, "苏宁易购", keyword)
+	log.Printf(KEYLOG_FORMAT, SUNING, keyword)
 	keyword = url.QueryEscape(keyword)
-	items := Suning(keyword)
-	for index := 0; index < len(items); index++ {
-		item := items[index]
-		if (item.price != "" && item.price != "0") {
-			log.Printf(ITEMLOG_FORMAT, index + 1, item.price, item.title)
+	items, url := Suning(keyword)
+	if length := len(items); length > 0 {
+		count := 0
+		var lowest Item
+		for index := 0; index < length; index++ {
+			item := items[index]
+			if (item.price != "" && item.price != "0" && item.vendor == "") {
+				count += 1
+				log.Printf(ITEMLOG_FORMAT, count, item.price, item.title, item.url)
+			}
+			if ((item.price))
 		}
+		if count == 0 {
+
+		}
+	} else {
+		log.Println("No Item: ", url)
 	}
 }

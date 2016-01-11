@@ -149,14 +149,14 @@ func LoadSuning(keyword string) {
 	items, url := Suning(keyword)
 	if length := len(items); length > 0 {
 		count := 0
-		var lowest Item
+		//var lowest Item
 		for index := 0; index < length; index++ {
 			item := items[index]
 			if (item.price != "" && item.price != "0" && item.vendor == "") {
 				count += 1
 				log.Printf(ITEMLOG_FORMAT, count, item.price, item.title, item.url)
 			}
-			if ((item.price))
+			//if ((item.price))
 		}
 		if count == 0 {
 

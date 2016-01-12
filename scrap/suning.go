@@ -11,6 +11,8 @@ import (
 	"io/ioutil"
 	"encoding/json"
 	"strings"
+	"math"
+	"github.com/henrylee2cn/pholcus/common/util"
 )
 
 type Price struct {
@@ -145,21 +147,24 @@ func NewRequest(targeturl string) *http.Request {
 
 func LoadSuning(keyword string) {
 	log.Printf(KEYLOG_FORMAT, SUNING, keyword)
-	keyword = url.QueryEscape(keyword)
-	items, url := Suning(keyword)
+	key := url.QueryEscape(keyword)
+	items, url := Suning(key)
 	if length := len(items); length > 0 {
 		count := 0
-		//var lowest Item
+		lowest_pos := -1
+		lowest_price := math.MaxInt32
 		for index := 0; index < length; index++ {
 			item := items[index]
 			if (item.price != "" && item.price != "0" && item.vendor == "") {
 				count += 1
-				log.Printf(ITEMLOG_FORMAT, count, item.price, item.title, item.url)
+				log.Printf(ITEMLOG_FORMAT, count, SUNING, keyword, item.price, item.title, item.url)
 			}
-			//if ((item.price))
+			if util.Atoi(item.price) < lowest_price {
+				lowest_pos = index
+			}
 		}
 		if count == 0 {
-
+			log.Printf(ITEMLOG_FORMAT, count, SUNING, keyword, items[lowest_pos].price, items[lowest_pos].title, items[lowest_pos].url)
 		}
 	} else {
 		log.Println("No Item: ", url)

@@ -7,6 +7,8 @@ import (
 	httpclient "github.com/mreiferson/go-httpclient"
 	"github.com/PuerkitoBio/goquery"
 	"net/url"
+    "strings"
+	"regexp"
 )
 
 func Jd(keyword string) ([]Item, string) {
@@ -47,15 +49,19 @@ func Jd(keyword string) ([]Item, string) {
 	return items, targeturl
 }
 
+func ParsePrice(text string) string {
+	price_rex, _ := regexp.Compile(".*¥(\\d+\\.?\\d+).*")
+	return strings.TrimSpace(price_rex.ReplaceAllString(text, "$1"))
+}
 
 func LoadJD(keyword string) {
 	log.Printf(KEYLOG_FORMAT, JD, keyword)
-	keyword = url.QueryEscape(keyword)
-	items, url := Jd(keyword)
+	key := url.QueryEscape(keyword)
+	items, url := Jd(key)
 	if length := len(items); length > 0 {
 		for index := 0; index < length; index++ {
 			item := items[index]
-			log.Printf(ITEMLOG_FORMAT, index + 1, item.price, item.title, "http:" + item.url)
+			log.Printf(ITEMLOG_FORMAT, index + 1, JD, keyword, item.price, item.title, "http:" + item.url)
 		}
 	} else {
 		log.Println("No Item: ", url)

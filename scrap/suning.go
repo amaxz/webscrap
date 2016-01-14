@@ -12,7 +12,8 @@ import (
 	"encoding/json"
 	"strings"
 	"math"
-	"github.com/henrylee2cn/pholcus/common/util"
+	"strconv"
+	"fmt"
 )
 
 type Price struct {
@@ -25,12 +26,10 @@ type Res struct {
 	CatentryId string   `json:"catentryId"`
 	Price      string   `json:"price"`
 	VendorName string   `json:"vendorName"`
-	//SnPrice    string   `json:"snPrice"`
 }
 
 func Suning(keyword string) ([]Item, string) {
-
-	targeturl := "http://search.suning.com/" + keyword + "/&ci=20006&iy=-1"//"/&sc=0&ct=1&st=0"
+	targeturl := "http://search.suning.com/" + url.QueryEscape(keyword) + "/&ci=20006&iy=-1"//"/&sc=0&ct=1&st=0"
 	request := NewRequest(targeturl)
 	transport := &httpclient.Transport{
 		ConnectTimeout:        10 * time.Second,
@@ -56,42 +55,47 @@ func Suning(keyword string) ([]Item, string) {
 	}
 
 	nodes := doc.Find(".wrap")
-	items := make([]Item, nodes.Length())
-	nodes.Each(func(i int, s *goquery.Selection) {
 
-		a := s.Find("a.sellPoint")
-		vband := ParseTitle(a.Text())
-		href, _ := a.Attr("href")
-		item := Item{title: vband, price: "0", url: href}
+	if items := make([]Item, nodes.Length()); len(items) > 0 {
 
-		if classstr, ok := s.Find(".hidenInfo").Attr("datapro"); ok {
-			regx, _ := regexp.Compile("\\d+")
+		nodes.Each(func(i int, s *goquery.Selection) {
 
-			if properties := regx.FindAllString(classstr, -1); len(properties) >= 2 {
-				commodityid, catentryid := properties[0], properties[1]
-				if len(commodityid) < len(catentryid) {
-					commodityid, catentryid = properties[1], properties[0]
+			a := s.Find("a.sellPoint")
+			vband := ParseTitle(a.Text())
+			href, _ := a.Attr("href")
+			item := Item{Title: vband, Price: "0", Url: href, Keyword: keyword}
+
+			if classstr, ok := s.Find(".hidenInfo").Attr("datapro"); ok {
+				regx, _ := regexp.Compile("\\d+")
+
+				if properties := regx.FindAllString(classstr, -1); len(properties) >= 2 {
+					commodityid, catentryid := properties[0], properties[1]
+					if len(commodityid) < len(catentryid) {
+						commodityid, catentryid = properties[1], properties[0]
+					}
+					zeros := 18 - len(commodityid)
+					for times := 0; times < zeros; times ++ {
+						commodityid = "0" + commodityid
+					}
+
+					item.Id = commodityid
+					item.Catentry = catentryid
+					//fmt.Println("Commodity ID: ", item.id, "Catentry ID: ", item.catentry)
 				}
-				zeros := 18 - len(commodityid)
-				for times := 0; times < zeros; times ++ {
-					commodityid = "0" + commodityid
-				}
-
-				item.id = commodityid
-				item.catentry = catentryid
-				//fmt.Println("Commodity ID: ", item.id, "Catentry ID: ", item.catentry)
 			}
-		}
-		items[i] = item
-	})
-
-	return QueryPrice(client, items), targeturl
+			items[i] = item
+		})
+		return QueryPrice(client, items), targeturl
+	} else {
+		log.Println("400", targeturl)
+		return []Item{}, targeturl
+	}
 }
 
 func QueryPrice(client *http.Client, items []Item) []Item {
 	var ids string
 	for i, length := 0, len(items); i < length; i ++ {
-		ids += items[i].id + "_" + items[i].catentry
+		ids += items[i].Id + "_" + items[i].Catentry
 		if (i + 1) >= 10 && (i + 1) % 10 == 0 {
 			FetchPrice(client, ids, items)
 			ids = ""
@@ -121,9 +125,9 @@ func FetchPrice(client *http.Client, ids string, items []Item) {
 
 		for j := 0; j < len(items); j++ {
 			for i := 0; i < len(dat.Rs); i++ {
-				if strings.EqualFold(items[j].id, dat.Rs[i].CmmdtyCode) {
-					items[j].price = dat.Rs[i].Price
-					items[j].vendor = dat.Rs[i].VendorName
+				if strings.EqualFold(items[j].Id, dat.Rs[i].CmmdtyCode) {
+					items[j].Price = dat.Rs[i].Price
+					items[j].Vendor = dat.Rs[i].VendorName
 				}
 			}
 		}
@@ -145,28 +149,36 @@ func NewRequest(targeturl string) *http.Request {
 	return request
 }
 
-func LoadSuning(keyword string) {
-	log.Printf(KEYLOG_FORMAT, SUNING, keyword)
-	key := url.QueryEscape(keyword)
-	items, url := Suning(key)
+func LoadSuning(keyword string) Fetch {
+	fmt.Printf(KEYLOG_FORMAT, SUNING, keyword)
+	items, url := Suning(keyword)
+	result := Fetch{Items: items, Url: url, Keyword: keyword, Status: 200}
 	if length := len(items); length > 0 {
 		count := 0
 		lowest_pos := -1
-		lowest_price := math.MaxInt32
+		lowest_price := math.MaxFloat32
+		utc := strconv.FormatInt(time.Now().Unix(), 10)
 		for index := 0; index < length; index++ {
 			item := items[index]
-			if (item.price != "" && item.price != "0" && item.vendor == "") {
+			item.Stamp = utc
+			if (item.Price != "" && item.Price != "0" && item.Vendor == "") {
 				count += 1
-				log.Printf(ITEMLOG_FORMAT, count, SUNING, keyword, item.price, item.title, item.url)
+				item.Vendor = SUNING
+				fmt.Printf(ITEMLOG_FORMAT, count, SUNING, item.Price, item.Title, item.Url)
+				log.Println(JsonString(item))
 			}
-			if util.Atoi(item.price) < lowest_price {
+			if p, err := strconv.ParseFloat(item.Price, 32); err == nil && p < lowest_price {
 				lowest_pos = index
+				lowest_price = p
 			}
 		}
-		if count == 0 {
-			log.Printf(ITEMLOG_FORMAT, count, SUNING, keyword, items[lowest_pos].price, items[lowest_pos].title, items[lowest_pos].url)
+		if count == 0 && lowest_pos != -1 {
+			items[lowest_pos].Stamp = utc
+			fmt.Printf(ITEMLOG_FORMAT, lowest_pos + 1, SUNING, items[lowest_pos].Price, items[lowest_pos].Title, items[lowest_pos].Url)
+			log.Println(JsonString(items[lowest_pos]))
 		}
 	} else {
-		log.Println("No Item: ", url)
+		result.Status = 404
 	}
+	return result
 }

@@ -9,11 +9,12 @@ import (
 	"net/url"
     "strings"
 	"regexp"
+	"fmt"
+	"strconv"
 )
 
 func Jd(keyword string) ([]Item, string) {
-
-	targeturl := "http://search.jd.com/Search?keyword=" + keyword + "&enc=utf-8&qrst=1&rt=1&stop=1&vt=2&sttr=1&click=1&cid3=655&psort=2&stock=1&click=1&wtype=1"
+	targeturl := "http://search.jd.com/Search?keyword=" + url.QueryEscape(keyword) + "&enc=utf-8&qrst=1&rt=1&stop=1&vt=2&sttr=1&click=1&cid3=655&psort=2&stock=1&click=1&wtype=1"
 	request, err := http.NewRequest("GET", targeturl, nil)
 	request.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1) AppleWebKit/601.2.7 (KHTML, like Gecko) Version/9.0.1	Safari/601.2.7")
 	//request.Header.Set("Cookie", "__jdc=122270672; mx=0_X; xtest=3178.7099.b7a782741f667201b54880c925faec4b.b7a782741f667201b54880c925faec4b; ipLoc-djd=1-72-2819-0; __jda=122270672.1466835460.1452133618.1452144837.1452151685.3; __jdv=122270672|direct|-|none|-; __jdu=1466835460; ipLocation=%u5357%u5b81; __jdb=122270672.2.1466835460|3.1452151685")
@@ -43,7 +44,7 @@ func Jd(keyword string) ([]Item, string) {
 		href, _ := a.Attr("href")
 		vband := ParseTitle(a.Text())
 		vprice := ParsePrice(s.Find(".p-price").Text())
-		items[i] = Item{title: vband, price: vprice, url: href}
+		items[i] = Item{Title: vband, Price: vprice, Url: href, Keyword: keyword}
 	})
 
 	return items, targeturl
@@ -54,18 +55,24 @@ func ParsePrice(text string) string {
 	return strings.TrimSpace(price_rex.ReplaceAllString(text, "$1"))
 }
 
-func LoadJD(keyword string) {
-	log.Printf(KEYLOG_FORMAT, JD, keyword)
-	key := url.QueryEscape(keyword)
-	items, url := Jd(key)
+func LoadJD(keyword string) Fetch {
+	fmt.Printf(KEYLOG_FORMAT, JD, keyword)
+	items, url := Jd(keyword)
+	result := Fetch{Items: items, Url: url, Keyword: keyword, Status: 200}
 	if length := len(items); length > 0 {
+		utc := strconv.FormatInt(time.Now().Unix(), 10)
 		for index := 0; index < length; index++ {
 			item := items[index]
-			log.Printf(ITEMLOG_FORMAT, index + 1, JD, keyword, item.price, item.title, "http:" + item.url)
+			item.Stamp = utc
+			item.Vendor = JD
+			fmt.Printf(ITEMLOG_FORMAT, index + 1, JD, item.Price, item.Title, "http:" + item.Url)
+			log.Println(JsonString(item))
 		}
 	} else {
-		log.Println("No Item: ", url)
+		result.Status = 400
+		log.Println("400", url)
 	}
+	return result
 }
 
 //"golang.org/x/text/transform"

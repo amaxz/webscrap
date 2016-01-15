@@ -42,7 +42,7 @@ func ScrapKeyword(keyword string) []scrap.Task {
 	jd := scrap.Task{ Keyword: keyword, Src: scrap.JD, Fetcher: scrap.JdFetcher{}}
 	sn := scrap.Task{ Keyword: keyword, Src: scrap.SUNING, Fetcher: scrap.SuningFetcher{}}
 
-	return []scrap.Task{ jd}
+	return []scrap.Task{jd, sn}
 }
 
 func main() {

@@ -10,7 +10,6 @@ import (
 	"strings"
 	"regexp"
 	"strconv"
-	"fmt"
 	"io/ioutil"
 	"encoding/json"
 	"unicode/utf8"
@@ -70,7 +69,7 @@ func Jd(keyword string) ([]Item, string) {
 		for k, _ := range shopids {
 			ids = append(ids, k)
 		}
-		fmt.Println(ids)
+		//fmt.Println(ids)
 		items = FetchVender(client, strings.Join(ids, ","), items)
 	}
 
@@ -80,7 +79,7 @@ func Jd(keyword string) ([]Item, string) {
 func FetchVender(client *http.Client, ids string, items []Item) []Item {
 	vendorUrl := "http://search.jd.com/ShopName.php?ids=" + ids
 	request := newJDRequest(vendorUrl)
-	fmt.Println("Fetch", vendorUrl)
+	//fmt.Println("Fetch", vendorUrl)
 	response, err := client.Do(request)
 	defer response.Body.Close()
 
@@ -88,13 +87,13 @@ func FetchVender(client *http.Client, ids string, items []Item) []Item {
 
 		body, _ := ioutil.ReadAll(response.Body)
 
-		fmt.Println("Parse json", vendorUrl, string(body))
+		//fmt.Println("Parse json", vendorUrl, string(body))
 		if _, start := utf8.DecodeRune(body); start > 0 {
 			body = body[start:]
 		}
 		shops := make([]ShopInfo, 0)
 		if err := json.Unmarshal(body, &shops); err != nil {
-			fmt.Println(body)
+			//fmt.Println(body)
 			for i, l := 0, len(items); i < l; i++  {
 				for _, shop := range shops  {
 					if shop.Id == items[i].Catentry {

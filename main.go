@@ -104,11 +104,11 @@ func ScrapList(keywords []string) []int {
 			time.Sleep(time.Duration(tmin) * time.Second)
 		}
 		for _, t := range task {
+			fmt.Printf(scrap.KEYLOG_FORMAT, t.Src, t.Keyword)
 			Load(t.Fetcher, &t)
 			if t.Status == 404 {
 				status[index] += 1
 			} else {
-				fmt.Printf(scrap.KEYLOG_FORMAT, t.Src, t.Keyword)
 				for count, item := range t.Items {
 					fmt.Printf(scrap.ITEMLOG_FORMAT, count + 1, item.Vendor, item.Price, item.Title, item.Url)
 					log.Println(scrap.JsonString(item))

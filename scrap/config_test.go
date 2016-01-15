@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"os"
 	"bufio"
+	"encoding/json"
+	"strconv"
 )
 
 func TestParsePrice(t *testing.T) {
-	text1 := ParsePrice("\rReview 0:   - 	¥1499.00\r			货到付款 ")
+	text1 := ParsePriceText("\rReview 0:   - 	¥1499.00\r			货到付款 ")
 	if strings.Index(text1, "1499.00") != 0 {
 		t.Error("Price must equals 149900", text1)
 	}
@@ -22,7 +24,7 @@ func TestParsePrice(t *testing.T) {
 	}
 }
 
-func TestFormatKey(t *testing.T)  {
+func TestFormatKey(t *testing.T) {
 	text1 := "三星 （SAMSUNG） G9200 FDD-LTE/TD-LTE版 32G, 金色"
 	fmt.Println("Format before", text1)
 	text1 = FormatKey(text1)
@@ -36,7 +38,7 @@ func TestFormatKey(t *testing.T)  {
 		defer file.Close()
 
 		re := bufio.NewReader(file)
-		for i := 0; ; i ++ {
+		for i := 0;; i ++ {
 			line, err := re.ReadString('\n')
 			if err != nil {
 				break
@@ -48,6 +50,22 @@ func TestFormatKey(t *testing.T)  {
 		}
 	} else {
 		panic(err)
+	}
+}
+
+func TestMap(t *testing.T) {
+	shopids := make(map[string][]string)
+	//s1 := make([]string, 5)
+	//s2 := make([]string, 5)
+
+	//shopids["aaa"] = &s1
+	//shopids["aab"] = &s2
+
+	shopids["aaa"] = append(shopids["aaa"], "ccc")
+	shopids["aab"] = append(shopids["aab"], "ccc", "ddd")
+
+	for k, v := range shopids {
+		fmt.Println(k, v)
 	}
 }
 
@@ -64,4 +82,31 @@ func TestJson(t *testing.T) {
 		t.Error("Json Marshal Error")
 	}
 	fmt.Println(json)
+}
+
+func TestFetchVender(t *testing.T) {
+
+	text := `[{"id":"160554","title":"\u7d22\u5c3c\u624b\u673a\u65d7\u8230\u5e97","url":"http:\/\/sonymobile.jd.com","venderId":165367}]`
+
+	dat := make([]ShopInfo, 0)
+	if err := json.Unmarshal([]byte(text), &dat); err != nil {
+		fmt.Println([]byte(text))
+		for i, v := range dat {
+			fmt.Println(i, v.Id)
+			title := ""
+			for _, r := range []rune(v.Title) {
+				rint := int(r)
+				if rint >= 128 {
+					title += strconv.QuoteRune(r)
+				} else {
+					title += string(r)
+				}
+			}
+			fmt.Println(strings.Replace(title, "'", "", -1))
+		}
+	} else {
+		fmt.Println(err)
+	}
+
+
 }

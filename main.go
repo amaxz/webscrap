@@ -15,6 +15,7 @@ import (
 var OutputFileName = flag.String("o", "webscrap.log", "Output file name")
 var InputFileName = flag.String("f", "", "Input file name (alternative with environment $WOEGO_WEBSCRAP_FILE)")
 var SleepSeconds = flag.Int("s", 10, "Minimum sleep duration second")
+
 var keywords []string = make([]string, 10)
 
 func init() {
@@ -28,14 +29,20 @@ func init() {
 	//defer logFile.Close()
 
 	//log.SetOutput(io.MultiWriter(os.Stdout, logFile))
-	log.SetOutput(logFile)
+	log.SetOutput(bufio.NewWriterSize(logFile, 100))
 	log.SetFlags(log.Ldate | log.Ltime)
 
 }
 
-func ScrapKeyword(keyword string) []scrap.Fetch {
-	return []scrap.Fetch{scrap.LoadSuning(keyword), scrap.LoadJD(keyword)}
-	//time.Sleep(time.Duration(1) * time.Second)
+func Load(fetcher scrap.Fetcher, task *scrap.Task) {
+	fetcher.Load(task)
+}
+
+func ScrapKeyword(keyword string) []scrap.Task {
+	jd := scrap.Task{ Keyword: keyword, Src: scrap.JD, Fetcher: scrap.JdFetcher{}}
+	sn := scrap.Task{ Keyword: keyword, Src: scrap.SUNING, Fetcher: scrap.SuningFetcher{}}
+
+	return []scrap.Task{ jd}
 }
 
 func main() {
@@ -92,15 +99,21 @@ func ScrapList(keywords []string) []int {
 		random := rand.New(rand.NewSource(time.Now().UnixNano()))
 		tmin := *SleepSeconds + random.Intn(*SleepSeconds)
 
-		fetchs := ScrapKeyword(key)
-		for _, v := range fetchs {
-			if v.Status == 404 {
-				status[index] += 1
-			}
-		}
-
-		if index != len(keywords) - 1 {
+		task := ScrapKeyword(key)
+		if index > 0 {
 			time.Sleep(time.Duration(tmin) * time.Second)
+		}
+		for _, t := range task {
+			Load(t.Fetcher, &t)
+			if t.Status == 404 {
+				status[index] += 1
+			} else {
+				fmt.Printf(scrap.KEYLOG_FORMAT, t.Src, t.Keyword)
+				for count, item := range t.Items {
+					fmt.Printf(scrap.ITEMLOG_FORMAT, count + 1, item.Vendor, item.Price, item.Title, item.Url)
+					log.Println(scrap.JsonString(item))
+				}
+			}
 		}
 	}
 	return status

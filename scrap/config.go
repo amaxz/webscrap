@@ -6,21 +6,33 @@ import (
 )
 
 type Item struct {
-	Id       string    `json:"-"`
-	Stamp    string     `json:"stamp"`
+	Id       string   `json:"-"`
+	Stamp    string   `json:"stamp"`
 	Vendor   string   `json:"vendor,omitempty"`
-	Keyword  string  `json:"q"`
-	Url      string      `json:"url"`
-	Price    string    `json:"price"`
-	Catentry string `json:"-"`
-	Title    string    `json:"title"`
+	Keyword  string   `json:"q"`
+	Url      string   `json:"url"`
+	Price    string   `json:"price"`
+	Catentry string   `json:"-"`
+	Title    string   `json:"title"`
 }
 
-type Fetch struct {
+type Fetcher interface {
+	Load(task *Task)
+}
+
+type Task struct {
 	Keyword string
 	Url     string
 	Items   []Item
 	Status  int
+	Src     string
+	Fetcher Fetcher
+}
+
+type JdFetcher struct {
+}
+
+type SuningFetcher struct {
 }
 
 const KEYLOG_FORMAT = "========================== %s: %s ==========================\n"
@@ -39,7 +51,7 @@ func FormatKey(key string) string {
 	regx2, _ := regexp.Compile("\\s\\s+")
 	key = regx2.ReplaceAllString(key, " ")
 
-	return key
+	return strings.TrimSpace(key)
 }
 
 func ParseTitle(text string) string {

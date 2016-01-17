@@ -86,10 +86,11 @@ func TestJson(t *testing.T) {
 
 func TestFetchVender(t *testing.T) {
 
-	text := `[{"id":"160554","title":"\u7d22\u5c3c\u624b\u673a\u65d7\u8230\u5e97","url":"http:\/\/sonymobile.jd.com","venderId":165367}]`
+	//text := `[{"id":"160554","title":"\u7d22\u5c3c\u624b\u673a\u65d7\u8230\u5e97","url":"http:\/\/sonymobile.jd.com","venderId":165367}]`
+	text := `[{"id":"1000004065","title":"OPPO\u624b\u673a\u5b98\u65b9\u65d7\u8230\u5e97","url":"http:\/\/oppo.jd.com","venderId":1000004065}]`
 
 	dat := make([]ShopInfo, 0)
-	if err := json.Unmarshal([]byte(text), &dat); err != nil {
+	if err := json.Unmarshal([]byte(text), &dat); err == nil {
 		fmt.Println([]byte(text))
 		for i, v := range dat {
 			fmt.Println(i, v.Id)
@@ -107,6 +108,10 @@ func TestFetchVender(t *testing.T) {
 	} else {
 		fmt.Println(err)
 	}
+
+	str := `OPPO\u624b\u673a\u5b98\u65b9\u65d7\u8230\u5e97`
+	str, _ = strconv.Unquote("\"" + str + "\"")
+	fmt.Println(str)
 
 
 }

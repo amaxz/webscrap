@@ -10,9 +10,12 @@ import (
 	"flag"
 	"fmt"
 	"bufio"
+	"strconv"
+	"strings"
+	"path"
 )
 
-var OutputFileName = flag.String("o", "webscrap.log", "Output file name")
+var OutputFileName = flag.String("o", "./output/S" + strings.ToUpper(strconv.FormatInt(time.Now().Unix(), 10)) + ".txt", "Output file name")
 var InputFileName = flag.String("f", "", "Input file name (alternative with environment $WOEGO_WEBSCRAP_FILE)")
 var SleepSeconds = flag.Int("s", 10, "Minimum sleep duration second")
 
@@ -22,6 +25,9 @@ func init() {
 
 	flag.Parse()
 
+	if _, err := os.Stat(*OutputFileName); err != nil {
+		os.Mkdir(path.Dir(*OutputFileName), 0774)
+	}
 	logFile, err := os.OpenFile(*OutputFileName, os.O_RDWR | os.O_CREATE | os.O_SYNC | os.O_APPEND, 0644)
 	if err != nil {
 		panic(err)
@@ -41,18 +47,19 @@ func Load(fetcher scrap.Fetcher, task *scrap.Task) {
 func ScrapKeyword(keyword string) []scrap.Task {
 	jd := scrap.Task{ Keyword: keyword, Src: scrap.JD, Fetcher: scrap.JdFetcher{}}
 	sn := scrap.Task{ Keyword: keyword, Src: scrap.SUNING, Fetcher: scrap.SuningFetcher{}}
+	tmall := scrap.Task{ Keyword: keyword, Src: scrap.TMALL, Fetcher: scrap.TmallFetcher{}}
 
-	return []scrap.Task{jd, sn}
+	return []scrap.Task{tmall, jd, sn}
 }
 
 func main() {
 
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
-	path := *InputFileName
-	if path == "" {
-		if path = os.Getenv("WOEGO_WEBSCRAP_FILE"); path != "" {
-			if _, err := os.Stat(path); err != nil {
+	filename := *InputFileName
+	if filename == "" {
+		if filename = os.Getenv("WOEGO_WEBSCRAP_FILE"); filename != "" {
+			if _, err := os.Stat(filename); err != nil {
 				fmt.Fprintf(os.Stderr, "Usage: %s [-o <path>] [-f <path> | <keyword>...]\n", os.Args[0])
 				flag.PrintDefaults()
 				return
@@ -60,8 +67,8 @@ func main() {
 		}
 	}
 
-	if path != "" {
-		file, _ := os.OpenFile(path, os.O_RDWR | os.O_CREATE | os.O_APPEND, os.ModePerm)
+	if filename != "" {
+		file, _ := os.OpenFile(filename, os.O_RDWR | os.O_CREATE | os.O_APPEND, os.ModePerm)
 		defer file.Close()
 
 		re := bufio.NewReader(file)
@@ -110,7 +117,7 @@ func ScrapList(keywords []string) []int {
 				status[index] += 1
 			} else {
 				for count, item := range t.Items {
-					fmt.Printf(scrap.ITEMLOG_FORMAT, count + 1, item.Vendor, item.Price, item.Title, item.Url)
+					fmt.Printf(scrap.ITEMLOG_FORMAT, count + 1, item.Price, item.Vendor, item.Title, item.Url)
 					log.Println(scrap.JsonString(item))
 				}
 			}

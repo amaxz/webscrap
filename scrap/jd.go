@@ -1,3 +1,4 @@
+
 package scrap
 
 import (
@@ -13,13 +14,14 @@ import (
 	"io/ioutil"
 	"encoding/json"
 	"unicode/utf8"
+	"fmt"
 )
 
 type ShopInfo struct {
 	Id       string `json:"id"`
 	Title    string `json:"title"`
 	Url      string `json:"url"`
-	VenderId string `json:"venderId,string"`
+	VenderId int    `json:"venderId"`
 }
 
 func Jd(keyword string) ([]Item, string) {
@@ -43,10 +45,14 @@ func Jd(keyword string) ([]Item, string) {
 
 	nodes := doc.Find(".gl-item")
 	items := make([]Item, nodes.Length())
-	var shopids = make(map [string] []string)
+	var shopids = make(map[string][]string)
 	nodes.Each(func(i int, s *goquery.Selection) {
 		a := s.Find(".p-name a")
 		items[i] = Item{}
+
+		items[i].Title = ParseTitle(a.Text())
+		items[i].Price = ParsePriceText(s.Find(".p-price").Text())
+
 		if id, exists := s.Attr("data-sku"); exists {
 			items[i].Id = id
 		}
@@ -60,9 +66,6 @@ func Jd(keyword string) ([]Item, string) {
 				shopids[shopid] = append(shopids[shopid], items[i].Id)
 			}
 		}
-
-		items[i].Title = ParseTitle(a.Text())
-		items[i].Price = ParsePriceText(s.Find(".p-price").Text())
 	})
 	if len(shopids) > 0 {
 		var ids []string
@@ -79,7 +82,6 @@ func Jd(keyword string) ([]Item, string) {
 func FetchVender(client *http.Client, ids string, items []Item) []Item {
 	vendorUrl := "http://search.jd.com/ShopName.php?ids=" + ids
 	request := newJDRequest(vendorUrl)
-	//fmt.Println("Fetch", vendorUrl)
 	response, err := client.Do(request)
 	defer response.Body.Close()
 
@@ -92,25 +94,27 @@ func FetchVender(client *http.Client, ids string, items []Item) []Item {
 			body = body[start:]
 		}
 		shops := make([]ShopInfo, 0)
-		if err := json.Unmarshal(body, &shops); err != nil {
-			//fmt.Println(body)
-			for i, l := 0, len(items); i < l; i++  {
-				for _, shop := range shops  {
-					if shop.Id == items[i].Catentry {
-						items[i].Vendor = shop.Title
-						/*title := ""
-						for _, r := range []rune(shop.Title) {
-							rint := int(r)
-							if rint >= 128 {
-								title += strconv.QuoteRune(r)
-							} else {
-								title += string(r)
-							}
+		json.Unmarshal(body, &shops)
+		//fmt.Println(body)
+		for i, l := 0, len(items); i < l; i++ {
+			for _, shop := range shops {
+				if shop.Id == items[i].Catentry {
+					items[i].Vendor = shop.Title
+					/*title := ""
+					for _, r := range []rune(shop.Title) {
+						rint := int(r)
+						if rint >= 128 {
+							title += strconv.QuoteRune(r)
+						} else {
+							title += string(r)
 						}
-						value.Vendor = strings.Replace(title, "'", "", -1)*/
 					}
+					value.Vendor = strings.Replace(title, "'", "", -1)*/
 				}
 			}
+		}
+		if len(shops) == 0 {
+			fmt.Println("No vender", vendorUrl)
 		}
 	}
 	return items
@@ -132,27 +136,20 @@ func ParsePriceText(text string) string {
 
 func (v JdFetcher) Load(task *Task) {
 	items, url := Jd(task.Keyword)
-	task.Items = items
 	task.Url = url
 	task.Status = 200
 	if length := len(items); length > 0 {
 		utc := strconv.FormatInt(time.Now().Unix(), 10)
 		for index := 0; index < length; index++ {
-			item := items[index]
-			item.Stamp = utc
-			item.Vendor = JD
+			items[index].Stamp = utc
+			items[index].Keyword = task.Keyword
+			items[index].Site = task.Src
+			if items[index].Vendor == "" {
+				items[index].Vendor = "京东自营"
+			}
 		}
+		task.Items = items
 	} else {
 		task.Status = 400
 	}
 }
-
-//"golang.org/x/text/transform"
-//"golang.org/x/text/encoding/unicode"
-//utfBody, err := iconv.NewReader(response.Body, "GBK", "utf-8")
-//func ToUTF8(gbkstr string) string {
-//	result, _, _ := transform.String(unicode.UTF8.NewEncoder(), gbkstr)
-//	return result
-//}
-
-

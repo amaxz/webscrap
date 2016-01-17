@@ -61,7 +61,7 @@ func (v SuningFetcher) Suning(keyword string) ([]Item, string) {
 			a := s.Find("a.sellPoint")
 			vband := ParseTitle(a.Text())
 			href, _ := a.Attr("href")
-			item := Item{Title: vband, Price: "0", Url: href, Keyword: keyword}
+			item := Item{Title: vband, Url: href}
 
 			if classstr, ok := s.Find(".hidenInfo").Attr("datapro"); ok {
 				regx, _ := regexp.Compile("\\d+")
@@ -71,11 +71,7 @@ func (v SuningFetcher) Suning(keyword string) ([]Item, string) {
 					if len(commodityid) < len(catentryid) {
 						commodityid, catentryid = properties[1], properties[0]
 					}
-					zeros := 18 - len(commodityid)
-					for times := 0; times < zeros; times ++ {
-						commodityid = "0" + commodityid
-					}
-
+					commodityid = strings.Repeat("0", 18 - len(commodityid)) + commodityid
 					item.Id = commodityid
 					item.Catentry = catentryid
 					//fmt.Println("Commodity ID: ", item.id, "Catentry ID: ", item.catentry)
@@ -149,7 +145,6 @@ func newRequest(targeturl string) *http.Request {
 
 func (v SuningFetcher) Load(task *Task) {
 	items, url := v.Suning(task.Keyword)
-	task.Items = items
 	task.Url = url
 	task.Status = 200
 	if length := len(items); length > 0 {
@@ -158,9 +153,12 @@ func (v SuningFetcher) Load(task *Task) {
 		//lowest_price := math.MaxFloat32
 		utc := strconv.FormatInt(time.Now().Unix(), 10)
 		for index := 0; index < length; index++ {
-			item := items[index]
-			item.Stamp = utc
-			item.Vendor = SUNING
+			items[index].Stamp = utc
+			items[index].Keyword = task.Keyword
+			items[index].Site = task.Src
+			if items[index].Vendor == "" {
+				items[index].Vendor = "苏宁自营"
+			}
 			//if (item.Price != "" && item.Price != "0" && item.Vendor == "") {
 			//   count += 1
 			//}
@@ -169,6 +167,19 @@ func (v SuningFetcher) Load(task *Task) {
 			//	lowest_price = p
 			//}
 		}
+		remove := func(x int) {
+			if end := len(items); x + 1 < end - 1 {
+				items = append(items[:x], items[x + 1:]...)
+			} else {
+				items = items[: end - 1]
+			}
+		}
+		for i, v := range items {
+			if v.Price == "" {
+				remove(i)
+			}
+		}
+		task.Items = items
 		/*if count == 0 && lowest_pos != -1 {
 			items[lowest_pos].Stamp = utc
 			fmt.Printf(ITEMLOG_FORMAT, lowest_pos + 1, SUNING, items[lowest_pos].Price, items[lowest_pos].Title, items[lowest_pos].Url)

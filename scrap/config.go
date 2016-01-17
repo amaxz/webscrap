@@ -7,10 +7,11 @@ import (
 
 type Item struct {
 	Id       string   `json:"-"`
+	Site     string   `json:"src"`
 	Stamp    string   `json:"stamp"`
-	Vendor   string   `json:"vendor,omitempty"`
 	Keyword  string   `json:"q"`
 	Url      string   `json:"url"`
+	Vendor   string   `json:"vendor,omitempty"`
 	Price    string   `json:"price"`
 	Catentry string   `json:"-"`
 	Title    string   `json:"title"`
@@ -29,16 +30,20 @@ type Task struct {
 	Fetcher Fetcher
 }
 
+type TmallFetcher struct {
+}
+
 type JdFetcher struct {
 }
 
 type SuningFetcher struct {
 }
 
-const KEYLOG_FORMAT = "========================== %s: %s ==========================\n"
-const ITEMLOG_FORMAT = "%2d %s %8s <%s> (%s)\n"
+const KEYLOG_FORMAT = "\n========================== %s: %s ==========================\n"
+const ITEMLOG_FORMAT = "%2d %8s %s <%s> (%s)\n"
 const SUNING = "苏宁易购"
 const JD = "京东商城"
+const TMALL = "天猫商城"
 
 func FormatKey(key string) string {
 
@@ -55,7 +60,7 @@ func FormatKey(key string) string {
 }
 
 func ParseTitle(text string) string {
-	title_rex, _ := regexp.Compile("\\s+|\\d+关注")
+	title_rex, _ := regexp.Compile("\\s+")
 	return strings.TrimSpace(title_rex.ReplaceAllString(text, " "))
 }
 

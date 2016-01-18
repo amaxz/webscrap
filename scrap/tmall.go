@@ -47,7 +47,7 @@ func Tmall(keyword string) ([]Item, string) {
 
 		if id, exists := s.Parent().Attr("data-id"); exists {
 			item.Id = id
-			item.Url = "(http://detail.tmall.com/item.htm?id=" + id
+			item.Url = "http://detail.tmall.com/item.htm?id=" + id
 		} else if href, exists := a.Attr("href"); exists {
 			if strings.Index(href, "http") < 0 {href = "http:" + href}
 			item.Url = href

@@ -1,6 +1,6 @@
 ## Web Scrap 
 
-Webscrap is a price fetcher of commodity sells on e-commerce website like `JD.com`, `Suning.COM`, `Tmall.com`, etc
+Webscrap is a price fetcher of commodity sells on e-commerce website like `JD.com`, `Suning.com`, `Tmall.com`, etc
 
 ### How to run
 
@@ -12,7 +12,7 @@ Usage: `./webscrap [-o <path>] [-f <path> | <keyword>...]`
 
 * `-o path`
 
-    Output file name (default "./output/S`UnixTime`.txt"), search result output with json format line text prefixed with timestamp  
+    Output file name (default "./output/S`${UnixTime}`.txt"), search result output with json format line text prefixed with timestamp  
 
 * `-s number`
 

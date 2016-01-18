@@ -45,14 +45,14 @@ func Load(fetcher scrap.Fetcher, task *scrap.Task) {
 }
 
 func ScrapKeyword(keyword string) []scrap.Task {
-	jd := scrap.Task{ Keyword: keyword, Src: scrap.JD, Fetcher: scrap.JdFetcher{}}
-	sn := scrap.Task{ Keyword: keyword, Src: scrap.SUNING, Fetcher: scrap.SuningFetcher{}}
-	tmall := scrap.Task{ Keyword: keyword, Src: scrap.TMALL, Fetcher: scrap.TmallFetcher{}}
+	jd := scrap.Task{Keyword: keyword, Src: scrap.JD, Fetcher: scrap.JdFetcher{}}
+	sn := scrap.Task{Keyword: keyword, Src: scrap.SUNING, Fetcher: scrap.SuningFetcher{}}
+	tmall := scrap.Task{Keyword: keyword, Src: scrap.TMALL, Fetcher: scrap.TmallFetcher{}}
 
 	return []scrap.Task{tmall, jd, sn}
 }
 
-func usage()  {
+func usage() {
 	fmt.Fprintf(os.Stderr, "Usage: %s [-o <path>] [-f <path> | <keyword>...]\n", os.Args[0])
 	flag.PrintDefaults()
 }

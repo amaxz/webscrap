@@ -8,6 +8,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"strconv"
+	"time"
 )
 
 func TestParsePrice(t *testing.T) {
@@ -82,6 +83,10 @@ func TestJson(t *testing.T) {
 		t.Error("Json Marshal Error")
 	}
 	fmt.Println(json)
+}
+
+func TestTimeFormat(t *testing.T) {
+	fmt.Println(time.RFC850)
 }
 
 func TestFetchVender(t *testing.T) {

@@ -52,16 +52,26 @@ func ScrapKeyword(keyword string) []scrap.Task {
 	return []scrap.Task{tmall, jd, sn}
 }
 
+func usage()  {
+	fmt.Fprintf(os.Stderr, "Usage: %s [-o <path>] [-f <path> | <keyword>...]\n", os.Args[0])
+	flag.PrintDefaults()
+}
+
 func main() {
 
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	filename := *InputFileName
+
+	if filename == "" && flag.NArg() == 0 {
+		usage()
+		return
+	}
+
 	if filename == "" {
 		if filename = os.Getenv("WOEGO_WEBSCRAP_FILE"); filename != "" {
 			if _, err := os.Stat(filename); err != nil {
-				fmt.Fprintf(os.Stderr, "Usage: %s [-o <path>] [-f <path> | <keyword>...]\n", os.Args[0])
-				flag.PrintDefaults()
+				usage()
 				return
 			}
 		}
@@ -118,7 +128,9 @@ func ScrapList(keywords []string) []int {
 			} else {
 				for count, item := range t.Items {
 					fmt.Printf(scrap.ITEMLOG_FORMAT, count + 1, item.Price, item.Vendor, item.Title, item.Url)
-					log.Println(scrap.JsonString(item))
+					if item.Price != "" {
+						log.Println(scrap.JsonString(item))
+					}
 				}
 			}
 		}

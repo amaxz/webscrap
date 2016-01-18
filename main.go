@@ -78,7 +78,7 @@ func main() {
 	}
 
 	if filename != "" {
-		file, _ := os.OpenFile(filename, os.O_RDWR | os.O_CREATE | os.O_APPEND, os.ModePerm)
+		file, _ := os.OpenFile(filename, os.O_RDONLY, os.ModePerm)
 		defer file.Close()
 
 		re := bufio.NewReader(file)

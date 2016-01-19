@@ -6,7 +6,6 @@ import (
 	"net/http"
 	httpclient "github.com/mreiferson/go-httpclient"
 	"github.com/PuerkitoBio/goquery"
-	"net/url"
 	"regexp"
 	"io/ioutil"
 	"encoding/json"
@@ -27,7 +26,7 @@ type Res struct {
 }
 
 func (v SuningFetcher) Suning(keyword string) ([]Item, string) {
-	targeturl := "http://search.suning.com/" + url.QueryEscape(keyword) + "/&ci=20006&iy=-1"//"/&sc=0&ct=1&st=0"
+	targeturl := "http://search.suning.com/" + FormatKey(keyword) + "/&ci=20006&iy=-1"//"/&sc=0&ct=1&st=0"
 	request := newRequest(targeturl)
 	transport := &httpclient.Transport{
 		ConnectTimeout:        10 * time.Second,

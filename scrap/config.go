@@ -3,6 +3,7 @@ import (
 	"regexp"
 	"strings"
 	"encoding/json"
+	"net/url"
 )
 
 type Item struct {
@@ -56,7 +57,7 @@ func FormatKey(key string) string {
 	regx2, _ := regexp.Compile("\\s\\s+")
 	key = regx2.ReplaceAllString(key, " ")
 
-	return strings.TrimSpace(key)
+	return strings.TrimSpace(url.QueryEscape(key))
 }
 
 func ParseTitle(text string) string {

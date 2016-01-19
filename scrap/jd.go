@@ -7,7 +7,6 @@ import (
 	"net/http"
 	httpclient "github.com/mreiferson/go-httpclient"
 	"github.com/PuerkitoBio/goquery"
-	"net/url"
 	"strings"
 	"regexp"
 	"strconv"
@@ -25,7 +24,7 @@ type ShopInfo struct {
 }
 
 func Jd(keyword string) ([]Item, string) {
-	targeturl := "http://search.jd.com/Search?keyword=" + url.QueryEscape(keyword) + "&enc=utf-8&qrst=1&rt=1&stop=1&vt=2&sttr=1&click=1&cid3=655"//&psort=2&stock=1&click=1&wtype=1"
+	targeturl := "http://search.jd.com/Search?keyword=" + FormatKey(keyword) + "&enc=utf-8&qrst=1&rt=1&stop=1&vt=2&sttr=1&click=1&cid3=655"//&psort=2&stock=1&click=1&wtype=1"
 	transport := &httpclient.Transport{
 		ConnectTimeout:        5 * time.Second,
 		RequestTimeout:        10 * time.Second,

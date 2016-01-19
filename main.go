@@ -110,7 +110,6 @@ func ScrapList(keywords []string) []int {
 	status := make([]int, len(keywords))
 	for index, key := range keywords {
 
-		key = scrap.FormatKey(key)
 		if key == "" {continue}
 
 		random := rand.New(rand.NewSource(time.Now().UnixNano()))

@@ -13,31 +13,18 @@ import (
 	"strconv"
 	"strings"
 	"path"
+	"syscall"
 )
 
 var OutputFileName = flag.String("o", "./output/S" + strings.ToUpper(strconv.FormatInt(time.Now().Unix(), 10)) + ".txt", "Output file name")
 var InputFileName = flag.String("f", "", "Input file name (alternative with environment $WOEGO_WEBSCRAP_FILE)")
 var SleepSeconds = flag.Int("s", 10, "Minimum sleep duration second")
+var QuietMode = flag.Bool("q", false, "No file output, recovery -o when setting -q")
 
 var keywords []string = make([]string, 10)
 
 func init() {
-
 	flag.Parse()
-
-	if _, err := os.Stat(*OutputFileName); err != nil {
-		os.Mkdir(path.Dir(*OutputFileName), 0774)
-	}
-	logFile, err := os.OpenFile(*OutputFileName, os.O_RDWR | os.O_CREATE | os.O_SYNC | os.O_APPEND, 0644)
-	if err != nil {
-		panic(err)
-	}
-	//defer logFile.Close()
-
-	//log.SetOutput(io.MultiWriter(os.Stdout, logFile))
-	log.SetOutput(bufio.NewWriterSize(logFile, 100))
-	log.SetFlags(log.Ldate | log.Ltime)
-
 }
 
 func Load(fetcher scrap.Fetcher, task *scrap.Task) {
@@ -53,7 +40,7 @@ func ScrapKeyword(keyword string) []scrap.Task {
 }
 
 func usage() {
-	fmt.Fprintf(os.Stderr, "Usage: %s [-o <path>] [-f <path> | <keyword>...]\n", os.Args[0])
+	fmt.Fprintf(os.Stderr, "  Usage: %s [-o <path>] [-q] [-f <path> | <keyword>...]\nExample: %s -f ./input.txt -o ./output.txt\n", os.Args[0])
 	flag.PrintDefaults()
 }
 
@@ -75,6 +62,24 @@ func main() {
 				return
 			}
 		}
+	}
+
+	if !*QuietMode {
+		if _, err := os.Stat(*OutputFileName); err != nil {
+			os.Mkdir(path.Dir(*OutputFileName), 0774)
+		}
+		logFile, err := os.OpenFile(*OutputFileName, os.O_RDWR | os.O_CREATE | os.O_SYNC | os.O_APPEND, 0644)
+		if err != nil {
+			panic(err)
+		}
+		defer logFile.Close()
+
+		//log.SetOutput(io.MultiWriter(os.Stdout, logFile))
+		log.SetOutput(bufio.NewWriterSize(logFile, 100))
+		log.SetFlags(log.Ldate | log.Ltime)
+
+	} else {
+		log.SetOutput(os.NewFile(uintptr(syscall.Stderr), os.DevNull))
 	}
 
 	if filename != "" {

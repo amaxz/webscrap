@@ -40,7 +40,12 @@ func ScrapKeyword(keyword string) []scrap.Task {
 }
 
 func usage() {
-	fmt.Fprintf(os.Stderr, "  Usage: %s [-o <path>] [-q] [-f <path> | <keyword>...]\nExample: %s -f ./input.txt -o ./output.txt\n", os.Args[0])
+	fmt.Fprintf(os.Stdout,
+		"  Usage 1: %s [-o <path>] [-f <path>] [-q]\n" +
+		"        2: %s [<keyword>...]\n\n" +
+		"Example 1: %s -f ./input.txt -o ./output.txt\n" +
+		"        2: %s XIAOMI4 \"iPhone 4S\" \"HUAWEI Mate 8\"\n\n",
+		os.Args[0], os.Args[0], os.Args[0], os.Args[0])
 	flag.PrintDefaults()
 }
 

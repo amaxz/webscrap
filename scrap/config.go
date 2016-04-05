@@ -3,7 +3,6 @@ import (
 	"regexp"
 	"strings"
 	"encoding/json"
-	"net/url"
 )
 
 type Item struct {
@@ -29,6 +28,7 @@ type Task struct {
 	Status  int
 	Src     string
 	Fetcher Fetcher
+	Brand   string
 }
 
 type TmallFetcher struct {
@@ -46,7 +46,7 @@ const SUNING = "苏宁易购"
 const JD = "京东商城"
 const TMALL = "天猫商城"
 
-func FormatKey(key string) string {
+func FormatKey(key string) (string, string) {
 
 	regx3, _ := regexp.Compile("\\s\\d\\.\\d+\\s|FDD-LTE/TD-LTE版|FDD-LTE版|TD-LTE版|TD-SCDMA版|WCDMA版|GSM版")
 	key = regx3.ReplaceAllString(key, "")
@@ -57,7 +57,7 @@ func FormatKey(key string) string {
 	regx2, _ := regexp.Compile("\\s\\s+")
 	key = regx2.ReplaceAllString(key, " ")
 
-	return strings.TrimSpace(url.QueryEscape(key))
+	return strings.TrimSpace(key), strings.Split(key, " ")[0]
 }
 
 func ParseTitle(text string) string {
@@ -67,7 +67,6 @@ func ParseTitle(text string) string {
 
 func JsonString(item interface{}) string {
 	b, _ := json.Marshal(item)
-	s := string(b)
-	return s
+	return string(b)
 }
 

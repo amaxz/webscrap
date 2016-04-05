@@ -26,13 +26,15 @@ type Res struct {
 }
 
 func (v SuningFetcher) Suning(keyword string) ([]Item, string) {
-	targeturl := "http://search.suning.com/" + FormatKey(keyword) + "/&ci=20006&iy=-1"//"/&sc=0&ct=1&st=0"
+	targeturl := "http://search.suning.com/" + keyword + "/&ci=20006&iy=-1"//"/&sc=0&ct=1&st=0"
+	log.Println(targeturl)
 	request := newRequest(targeturl)
 	transport := &httpclient.Transport{
-		ConnectTimeout:        10 * time.Second,
-		RequestTimeout:        10 * time.Second,
+		ConnectTimeout:        20 * time.Second,
+		RequestTimeout:        20 * time.Second,
 		ResponseHeaderTimeout: 15 * time.Second,
 	}
+	defer transport.Close()
 	client := &http.Client{Transport: transport}
 
 	response, err := client.Do(request)

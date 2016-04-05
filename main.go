@@ -14,6 +14,7 @@ import (
 	"strings"
 	"path"
 	"syscall"
+	"net/url"
 )
 
 var OutputFileName = flag.String("o", "./output/S" + strings.ToUpper(strconv.FormatInt(time.Now().Unix(), 10)) + ".txt", "Output file name")
@@ -28,6 +29,9 @@ func init() {
 }
 
 func Load(fetcher scrap.Fetcher, task *scrap.Task) {
+	k, b := scrap.FormatKey(task.Keyword)
+	task.Keyword = url.QueryEscape(k)
+	task.Brand = b
 	fetcher.Load(task)
 }
 
@@ -136,9 +140,11 @@ func ScrapList(keywords []string) []int {
 				status[index] += 1
 			} else {
 				for count, item := range t.Items {
-					fmt.Printf(scrap.ITEMLOG_FORMAT, count + 1, item.Price, item.Vendor, item.Title, item.Url)
-					if item.Price != "" {
-						log.Println(scrap.JsonString(item))
+					if strings.Contains(strings.ToUpper(item.Title), strings.ToUpper(t.Brand)) {
+						fmt.Printf(scrap.ITEMLOG_FORMAT, count + 1, item.Price, item.Vendor, item.Title, item.Url)
+						if item.Price != "" {
+							log.Println(scrap.JsonString(item))
+						}
 					}
 				}
 			}

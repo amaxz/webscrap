@@ -13,12 +13,13 @@ import (
 )
 
 func Tmall(keyword string) ([]Item, string) {
-	targeturl := "https://list.tmall.com/search_product.htm?q=" + FormatKey(keyword) + "&cat=50024400&type=p&sort=d&spm=a220m.1000858.1000721.2.NpqWbx&from=.list.pc_1_searchbutton"
+	targeturl := "https://list.tmall.com/search_product.htm?q=" + keyword + "&cat=50024400&type=p&sort=d&spm=a220m.1000858.1000721.2.NpqWbx&from=.list.pc_1_searchbutton"
 	transport := &httpclient.Transport{
-		ConnectTimeout:        5 * time.Second,
-		RequestTimeout:        10 * time.Second,
+		ConnectTimeout:        15 * time.Second,
+		RequestTimeout:        20 * time.Second,
 		ResponseHeaderTimeout: 15 * time.Second,
 	}
+	defer transport.Close()
 	client := &http.Client{Transport: transport}
 
 	response, err := client.Do(newTmallRequest(targeturl))

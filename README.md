@@ -2,6 +2,20 @@
 
 Webscrap is a price fetcher of commodity sells on e-commerce website like `JD.com`, `Suning.com`, `Tmall.com`, etc
 
+### How to build
+
+* win32
+
+    GOOS=windows GOARCH=386 CGO_ENABLED=0 go build -ldflags -s -o webscrap-win32.exe webscrap
+
+* linux
+
+    env GOOS=linux GOARCH=386 CGO_ENABLED=0 go build -ldflags -s -o webscrap-linux webscrap
+
+* OS X
+
+    GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -ldflags -w -o webscrap-darwin webscrap
+
 ### How to run
 
 Usage: `./webscrap [-o <path>] [-f <path> | <keyword>...]`

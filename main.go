@@ -14,7 +14,6 @@ import (
 	"strings"
 	"path"
 	"syscall"
-	"net/url"
 )
 
 var OutputFileName = flag.String("o", "./output/S" + strings.ToUpper(strconv.FormatInt(time.Now().Unix(), 10)) + ".txt", "Output file name")
@@ -29,9 +28,10 @@ func init() {
 }
 
 func Load(fetcher scrap.Fetcher, task *scrap.Task) {
-	k, b := scrap.FormatKey(task.Keyword)
-	task.Keyword = url.QueryEscape(k)
+	k, b, m := scrap.FormatKey(task.Keyword)
+	task.Keyword = k
 	task.Brand = b
+	task.Model = m
 	fetcher.Load(task)
 }
 
@@ -124,7 +124,9 @@ func ScrapList(keywords []string) []int {
 	status := make([]int, len(keywords))
 	for index, key := range keywords {
 
-		if key == "" {continue}
+		if key == "" {
+			continue
+		}
 
 		random := rand.New(rand.NewSource(time.Now().UnixNano()))
 		tmin := *SleepSeconds + random.Intn(*SleepSeconds)
@@ -140,11 +142,15 @@ func ScrapList(keywords []string) []int {
 				status[index] += 1
 			} else {
 				for count, item := range t.Items {
-					if strings.Contains(strings.ToUpper(item.Title), strings.ToUpper(t.Brand)) {
-						fmt.Printf(scrap.ITEMLOG_FORMAT, count + 1, item.Price, item.Vendor, item.Title, item.Url)
-						if item.Price != "" {
-							log.Println(scrap.JsonString(item))
-						}
+					if !strings.Contains(strings.ToUpper(item.Title), strings.ToUpper(t.Brand)) {
+						continue
+					}
+					if len(t.Model) > 1 && !strings.Contains(strings.ToUpper(item.Title), strings.ToUpper(t.Model)) {
+						continue
+					}
+					fmt.Printf(scrap.ITEMLOG_FORMAT, count + 1, item.Price, item.Vendor, item.Title, item.Url)
+					if item.Price != "" {
+						log.Println(scrap.JsonString(item))
 					}
 				}
 			}

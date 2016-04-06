@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"strings"
 	"strconv"
+	"net/url"
 )
 
 type Price struct {
@@ -26,7 +27,7 @@ type Res struct {
 }
 
 func (v SuningFetcher) Suning(keyword string) ([]Item, string) {
-	targeturl := "http://search.suning.com/" + keyword + "/&ci=20006&iy=-1"//"/&sc=0&ct=1&st=0"
+	targeturl := "http://search.suning.com/" + url.QueryEscape(keyword) + "/&ci=20006&iy=-1"//"/&sc=0&ct=1&st=0"
 	log.Println(targeturl)
 	request := newRequest(targeturl)
 	transport := &httpclient.Transport{

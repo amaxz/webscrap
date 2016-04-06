@@ -28,7 +28,7 @@ func TestParsePrice(t *testing.T) {
 func TestFormatKey(t *testing.T) {
 	text1 := "三星 （SAMSUNG） G9200 FDD-LTE/TD-LTE版 32G, 金色"
 	fmt.Println("Format before", text1)
-	text1, _ = FormatKey(text1)
+	text1, _, _ = FormatKey(text1)
 	fmt.Println("Format after", text1)
 	if strings.Index(text1, "FDD") > 0 {
 		t.Error("Formate error")
@@ -46,7 +46,7 @@ func TestFormatKey(t *testing.T) {
 			}
 			if string(line) != "" {
 				fmt.Println(line)
-				k, _ := FormatKey(line)
+				k, _, _ := FormatKey(line)
 				fmt.Println("Text", k)
 			}
 		}

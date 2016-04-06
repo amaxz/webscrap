@@ -14,6 +14,7 @@ import (
 	"encoding/json"
 	"unicode/utf8"
 	"fmt"
+	"net/url"
 )
 
 type ShopInfo struct {
@@ -24,7 +25,7 @@ type ShopInfo struct {
 }
 
 func Jd(keyword string) ([]Item, string) {
-	targeturl := "http://search.jd.com/Search?keyword=" + keyword + "&enc=utf-8&qrst=1&rt=1&stop=1&vt=2&sttr=1&click=1&cid3=655"//&psort=2&stock=1&click=1&wtype=1"
+	targeturl := "http://search.jd.com/Search?keyword=" + url.QueryEscape(keyword) + "&enc=utf-8&qrst=1&rt=1&stop=1&vt=2&sttr=1&click=1&cid3=655"//&psort=2&stock=1&click=1&wtype=1"
 	transport := &httpclient.Transport{
 		ConnectTimeout:        15 * time.Second,
 		RequestTimeout:        20 * time.Second,

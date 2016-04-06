@@ -29,6 +29,7 @@ type Task struct {
 	Src     string
 	Fetcher Fetcher
 	Brand   string
+	Model   string
 }
 
 type TmallFetcher struct {
@@ -46,18 +47,25 @@ const SUNING = "苏宁易购"
 const JD = "京东商城"
 const TMALL = "天猫商城"
 
-func FormatKey(key string) (string, string) {
+func FormatKey(key string) (string, string, string) {
 
-	regx3, _ := regexp.Compile("\\s\\d\\.\\d+\\s|FDD-LTE/TD-LTE版|FDD-LTE版|TD-LTE版|TD-SCDMA版|WCDMA版|GSM版")
+	regx3, _ := regexp.Compile("\\s\\d\\.?\\d+\\s|FDD-LTE/TD-LTE版|FDD-LTE版|TD-LTE版|TD-SCDMA版|WCDMA版|GSM版")
 	key = regx3.ReplaceAllString(key, "")
 
-	regx1, _ := regexp.Compile("（.*）|/|,|\\+|\\.")
+	regx1, _ := regexp.Compile("（.*）|/|,|\\+|\\.|.色|\\d+G")
 	key = regx1.ReplaceAllString(key, " ")
 
 	regx2, _ := regexp.Compile("\\s\\s+")
 	key = regx2.ReplaceAllString(key, " ")
 
-	return strings.TrimSpace(key), strings.Split(key, " ")[0]
+	items := strings.Split(key, " ")
+	if len(items) >= 2 {
+		return strings.TrimSpace(key), items[0], items[1]
+	} else if len(items) == 1 {
+		return strings.TrimSpace(key), items[0], ""
+	} else {
+		return strings.TrimSpace(key), "", ""
+	}
 }
 
 func ParseTitle(text string) string {

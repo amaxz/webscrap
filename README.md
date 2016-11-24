@@ -40,7 +40,7 @@ Usage: `./webscrap [-o <path>] [-f <path> | <keyword>...]`
     
 * `<keyword>...`
 
-    Query keyword, ex. `./webscrap "iPhone 5s" "SONY Z3"`, output:
+    Query keyword, ex. `./webscrap "huawei p9" "SONY Z3"`, output:
     
 ```
 ========================== 天猫商城: huawei p9 ==========================
